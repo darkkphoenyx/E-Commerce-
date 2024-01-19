@@ -1,1 +1,3 @@
-#run npm install to install all the dependencies
+#This is a E-commerce website
+br
+#Author: deep-esh
