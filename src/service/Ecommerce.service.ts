@@ -1,8 +1,6 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from '@prisma/client'
 
 //GET
-export const getData=async()=>{
-    
-}
+export const getData = async () => {}
 
 //POST

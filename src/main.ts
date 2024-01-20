@@ -1,5 +1,7 @@
-import express from 'express'
+import express, { NextFunction, Request, Response } from 'express'
 import EcRouter from './routes/Ecommerce.router'
+import User from './routes/user.router'
+import buildError from './utils/build-errors'
 const app = express()
 
 app.use(express.json())
@@ -10,7 +12,12 @@ app.listen(PORT, () => {
     console.log(`Server ready at : localhost:${PORT}`)
 })
 
-app.use('/Ecommerce',EcRouter)
+app.use('/Ecommerce', EcRouter)
+app.use('/user', User)
 
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    const error = buildError(err)
+    res.status(error.code).json({ error })
+})
 
 export default app
