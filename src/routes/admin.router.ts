@@ -1,39 +1,40 @@
-import { Router } from 'express'
-import { validateByBody, validateByid } from '../validators/validate'
+import { Router} from 'express'
+import { validateByBody } from '../validators/validate'
 import {
     loginSchema,
     signupSchema,
 } from '../validators/user.validator'
-import * as userController from '../controller/user.controller'
+import * as adminController from '../controller/admin.controller'
 import * as authController from '../controller/auth.controller'
+import * as userController from '../controller/user.controller'
 import {
     authenticateToken,
     isAdmin,
-    isUser,
 } from '../middlewares/authentication.middleware'
 
 const router = Router()
 
 router.post('/login', validateByBody(loginSchema), authController.login)
 router.post('/signup', validateByBody(signupSchema), authController.signup)
-//get user own details
-router.get('/:id',authenticateToken, userController.retrieveById)
+//GET all data -- admin only
+router.get('/allData',authenticateToken,isAdmin,adminController.getAllData)
+//get data of particular user
+router.get('/:id',authenticateToken, adminController.getById)
 router.post('/refresh', authController.refreshToken)
 router.post('/logout', () => {
     console.log(
         'this method should store any session info if stored, or remove cookie from the header'
     )
 })
-//only user can delete own data
-router.delete('/delete', authenticateToken, isUser, userController.deleteData)
+//admin can delete any data from the database
+router.delete('/delete/:id',authenticateToken,isAdmin,userController.deleteData)
+//Forgot password
 router.post('/forgot-password', () => {
     console.log(
         'this method should send an email using sendgrid to the user with forgot password link'
     )
 })
 
-//update data
-router.put('/:id', validateByid(signupSchema), validateByBody(signupSchema),authenticateToken,authController.updateData)
 export default router
 
 //how to add date in every request and response ??

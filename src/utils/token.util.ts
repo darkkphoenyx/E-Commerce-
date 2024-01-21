@@ -5,7 +5,7 @@ export const createAccessToken = (userId: number, isAdmin: boolean) => {
         { userId, isAdmin },
         process.env.JWT_ACCESS_TOKEN_SECRET as string,
         {
-            expiresIn: '5m',
+            expiresIn: '30m',
         }
     )
 }

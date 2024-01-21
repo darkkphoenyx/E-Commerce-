@@ -1,10 +1,9 @@
 import { NextFunction, Request, Response } from 'express'
 import * as userService from '../service/auth.service'
 import { RequestWithUserObject } from '../types'
-import { loginBodySchema } from '../validators/user.validator'
 
-//GET user own data - user only
-export const retrieveById = async (
+//GET user by id - admin access
+export const getById = async (
     id: number,
     req: RequestWithUserObject,
     res: Response,
@@ -20,17 +19,28 @@ export const retrieveById = async (
     }
 }
 
-// //Delete user
-export const deleteData = async (
-    req: RequestWithUserObject,
+//GET all data - admin access
+export const getAllData = async (
+    req: Request,
     res: Response,
     next: NextFunction
 ) => {
     try {
-        const request = loginBodySchema.parse(req.body)
-        const response = await userService.deleteUser(request)
+        const response = await userService.getAllData()
         res.json(response)
     } catch (err) {
+        next(err)
+    }
+}
+
+//DELETE by id - admin access
+export const deleteById = async(req:Request,res:Response,next:NextFunction)=>{
+    try{
+        const response = await userService.deleteById(Number(req.params.id))
+        res.json(response)
+    }
+    catch(err)
+    {
         next(err)
     }
 }
