@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from 'express'
 import { loginBodySchema, signupBodySchema } from '../validators/user.validator'
-import * as AuthService from '../service/user.service'
+import * as userService from '../service/user.service'
+import { RequestWithUserObject } from '../types'
+import { serverUnavailable } from '@hapi/boom'
 
 //Register new user
 export const signupUser = async (
@@ -9,7 +11,7 @@ export const signupUser = async (
     next: NextFunction
 ) => {
     try {
-        const createdUser = await AuthService.signup(
+        const createdUser = await userService.signup(
             signupBodySchema.parse(req.body)
         )
         res.status(201).json(createdUser)
@@ -27,7 +29,7 @@ export const loginUser = async (
     try {
         const { email, password } = loginBodySchema.parse(req.body)
 
-        const { accessToken, refreshToken } = await AuthService.login(
+        const { accessToken, refreshToken } = await userService.login(
             email,
             password
         )
@@ -40,15 +42,46 @@ export const loginUser = async (
     }
 }
 
+//GET user own data - user only 
+export const getById = async (
+    req: RequestWithUserObject,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        console.log()
+        const response = await userService.getById(req.user.userId)
+        console.log(response)
+        res.json(response)
+    } catch (err) {
+        next(err)
+    }
+}
+
+//GET all data - admin only
+export const getAllData= async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try{
+        const response = await userService.getAllData()
+        res.json(response)
+    }
+    catch(err){
+        next(err)
+    }
+}
+
 // //Delete user
 export const deleteUser = async (
-    req: Request,
+    req: RequestWithUserObject,
     res: Response,
     next: NextFunction
 ) => {
     try {
         const request = loginBodySchema.parse(req.body)
-        const response = await AuthService.deleteUser(request)
+        const response = await userService.deleteUser(request)
         res.json(response)
     } catch (err) {
         next(err)
@@ -63,7 +96,7 @@ export const refreshToken = async (
 ) => {
     const { refreshToken } = req.cookies
     try {
-        const token = await AuthService.refresh(refreshToken)
+        const token = await userService.refresh(refreshToken)
         res.json({ accessToken: token })
     } catch (error) {
         next(error)

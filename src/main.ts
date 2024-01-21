@@ -1,5 +1,4 @@
 import express, { NextFunction, Request, Response } from 'express'
-import EcRouter from './routes/Ecommerce.router'
 import User from './routes/user.router'
 import buildError from './utils/build-errors'
 const app = express()
@@ -12,7 +11,6 @@ app.listen(PORT, () => {
     console.log(`Server ready at : localhost:${PORT}`)
 })
 
-app.use('/Ecommerce', EcRouter)
 app.use('/user', User)
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

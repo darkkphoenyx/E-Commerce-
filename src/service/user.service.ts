@@ -12,14 +12,13 @@ import {
 
 //signup
 export const signup = async (user: z.infer<typeof signupBodySchema>) => {
-    const { email, password, phone_number, is_admin } = user
+    const { email, password, phone_number } = user
     try {
         return await prisma.user.create({
             data: {
                 email,
                 password: await bcrypt.hash(password, 10),
                 phone_number,
-                is_admin,
             },
             select: {
                 id: true,
@@ -39,6 +38,61 @@ export const signup = async (user: z.infer<typeof signupBodySchema>) => {
             throw e
         }
     }
+}
+
+//GET user own data - user only
+export const getById = async (id: number) => {
+    try {
+        // const result = await prisma.user.findFirstOrThrow({
+        //     where: {
+        //         id: Number(id),
+        //     },
+        //     include: {
+        //         addresses: true,
+        //     },
+        // })
+
+        //writing a raw sql query instead of include
+        const result = await prisma.$queryRaw`
+            select * from "User" u join "Address" a on a.user_id = u.id`
+
+        return result
+        // if (result.length > 0) {
+        //     console.log('Data found')
+        //     return result
+        // } else {
+        //     console.log('Data not found')
+        //     return 'Data not found'
+        //     // how to pass the JSON instead??
+        // }
+    } catch (err) {
+        console.error('Error retrieving data:', err)
+        throw err // You might want to handle or log the error appropriately
+    }
+}
+
+//GET all data - admin only
+export const getAllData = async () => {
+    try{
+    const result = await prisma.user.findMany({
+        include:{addresses:true}  //to get data from address table as well
+    }
+    )
+    
+    if (result.length > 0) {
+        console.log('Data found')
+        return result
+    } else {
+        console.log('Data not found')
+        return 'Data not found'
+        // how to pass the JSON instead??
+    }
+}
+catch(err)
+{
+    console.error("error while retriveing data")
+    throw(err)
+}
 }
 
 //login
@@ -83,6 +137,9 @@ export async function deleteUser(data: z.infer<typeof loginBodySchema>) {
     try {
         const user = await prisma.user.findFirst({
             where: { email: email },
+            include:{
+                addresses:true
+            }
         })
         console.log('here is delete')
         if (!user) {
