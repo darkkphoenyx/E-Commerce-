@@ -1,7 +1,29 @@
 import { NextFunction, Request, Response } from 'express'
-import * as userService from '../service/auth.service'
+import * as authService from '../service/auth.service'
 import { RequestWithUserObject } from '../types'
+import { loginBodySchema } from '../validators/auth.validator'
 
+//Login user
+export const adminLogin = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { email, password } = loginBodySchema.parse(req.body)
+
+        const { accessToken, refreshToken } = await authService.adminLogin(
+            email,
+            password
+        )
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            path: '/api/auth/refresh',
+        }).json({ accessToken })
+    } catch (error) {
+        next(error)
+    }
+}
 //GET user by id - admin access
 export const getById = async (
     id: number,
@@ -11,7 +33,7 @@ export const getById = async (
 ) => {
     try {
         console.log()
-        const response = await userService.getById(req.user.userId)
+        const response = await authService.getById(req.user.userId)
         console.log(response)
         res.json(response)
     } catch (err) {
@@ -26,7 +48,7 @@ export const getAllData = async (
     next: NextFunction
 ) => {
     try {
-        const response = await userService.getAllData()
+        const response = await authService.getAllData()
         res.json(response)
     } catch (err) {
         next(err)
@@ -36,7 +58,7 @@ export const getAllData = async (
 //DELETE by id - admin access
 export const deleteById = async(req:Request,res:Response,next:NextFunction)=>{
     try{
-        const response = await userService.deleteById(Number(req.params.id))
+        const response = await authService.deleteById(Number(req.params.id))
         res.json(response)
     }
     catch(err)

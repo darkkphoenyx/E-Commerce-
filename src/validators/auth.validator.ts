@@ -29,3 +29,12 @@ export const loginBodySchema = z.object({
 export const loginSchema = z.object({
     body: loginBodySchema,
 })
+
+//checking id is number
+export const updateById = z.object({
+    params: z.object({
+        id: z.string().refine((value) => !isNaN(Number(value)), {
+            message: 'ID must be a number',
+        }),
+    }),
+})

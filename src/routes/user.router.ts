@@ -1,9 +1,6 @@
 import { Router } from 'express'
 import { validateByBody, validateByid } from '../validators/validate'
-import {
-    loginSchema,
-    signupSchema,
-} from '../validators/user.validator'
+import { loginSchema, signupSchema, updateById } from '../validators/auth.validator'
 import * as userController from '../controller/user.controller'
 import * as authController from '../controller/auth.controller'
 import {
@@ -14,10 +11,10 @@ import {
 
 const router = Router()
 
-router.post('/login', validateByBody(loginSchema), authController.login)
+router.post('/login', validateByBody(loginSchema), userController.userLogin)
 router.post('/signup', validateByBody(signupSchema), authController.signup)
 //get user own details
-router.get('/:id',authenticateToken, userController.retrieveById)
+router.get('/:id', authenticateToken, isUser,userController.retrieveById)
 router.post('/refresh', authController.refreshToken)
 router.post('/logout', () => {
     console.log(
@@ -33,7 +30,13 @@ router.post('/forgot-password', () => {
 })
 
 //update data
-router.put('/:id', validateByid(signupSchema), validateByBody(signupSchema),authenticateToken,authController.updateData)
+router.put(
+    '/update/:id',
+    validateByid(updateById),
+    validateByBody(signupSchema),
+    authenticateToken,
+    authController.updateData
+)
 export default router
 
 //how to add date in every request and response ??

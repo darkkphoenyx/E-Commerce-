@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { loginBodySchema, signupBodySchema } from '../validators/user.validator'
+import { loginBodySchema, signupBodySchema } from '../validators/auth.validator'
 import * as authService from '../service/auth.service'
 import { RequestWithUserObject } from '../types'
 
@@ -18,29 +18,6 @@ export const signup = async (
         next(err)
     }
 }
-
-//Login user
-export const login = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
-    try {
-        const { email, password } = loginBodySchema.parse(req.body)
-
-        const { accessToken, refreshToken } = await authService.login(
-            email,
-            password
-        )
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            path: '/api/auth/refresh',
-        }).json({ accessToken })
-    } catch (error) {
-        next(error)
-    }
-}
-
 
 //Refresh access token
 export const refreshToken = async (
@@ -64,7 +41,10 @@ export const updateData = async (
     next: NextFunction
 ) => {
     try {
-        const response = await authService.updateData(req.params.id, req.body)
+        const response = await authService.updateData(
+            Number(req.params.id),
+            req.body
+        )
         res.json(response)
     } catch (error) {
         next(error)

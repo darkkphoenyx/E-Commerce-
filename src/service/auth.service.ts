@@ -1,7 +1,7 @@
 import prisma from '../utils/prisma'
 // import * as jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import { loginBodySchema, signupBodySchema } from '../validators/user.validator'
+import { loginBodySchema, signupBodySchema } from '../validators/auth.validator'
 import { number, string, z } from 'zod'
 import Boom from '@hapi/boom'
 import {
@@ -57,7 +57,6 @@ export const getById = async (id: number) => {
         // //writing a raw sql query instead of include
         // const result = await prisma.$queryRaw`
         //     select * from "User" u join "Address" a on a.user_id = u.id`
-
     } catch (err) {
         console.error('Error retrieving data:', err)
         throw err // You might want to handle or log the error appropriately
@@ -68,7 +67,7 @@ export const getById = async (id: number) => {
 export const getAllData = async () => {
     try {
         const result = await prisma.user.findMany({
-            include: { addresses: true }, 
+            include: { addresses: true },
             //to get data from address table as well
         })
         if (result.length > 0) {
@@ -86,7 +85,37 @@ export const getAllData = async () => {
 }
 
 //login
-export async function login(email: string, password: string) {
+export async function userLogin(email: string, password: string) {
+    //why not passing is_Admin
+    const user = await prisma.user.findFirst({ where: { email } })
+    if (!user) {
+        throw Boom.badRequest('Email incorrect.')
+    } else {
+        console.log(user.password)
+    }
+    console.log(user.password)
+
+    const passwordMatch = await bcrypt.compare(password, user.password)
+
+    if (!passwordMatch) {
+        throw Boom.badRequest('Incorrect Password.')
+    }
+    if(user.is_admin){
+        throw Boom.unauthorized('Admin is not allowed.')
+    }
+
+    const accessToken = createAccessToken(user.id, user.is_admin)
+
+    //accessToken = expires after certain period of time --- every request authentication
+
+    const refreshToken = createRefreshToken(user.id, user.is_admin)
+    //refreshToke = http only --- more secured
+
+    return { accessToken, refreshToken }
+}
+
+//login
+export async function adminLogin(email: string, password: string) {
     //why not passing is_Admin
     const user = await prisma.user.findFirst({ where: { email } })
     if (!user) {
@@ -99,8 +128,11 @@ export async function login(email: string, password: string) {
     const passwordMatch = await bcrypt.compare(password, user.password)
 
     if (!passwordMatch) {
-        throw Boom.badRequest('Username or password is incorrect.')
+        throw Boom.badRequest('Incorrect Password.')
     }
+    if(!user.is_admin){
+        throw Boom.unauthorized("Admin only login")
+    } 
 
     const accessToken = createAccessToken(user.id, user.is_admin)
 
@@ -143,7 +175,7 @@ export async function deleteUser(data: z.infer<typeof loginBodySchema>) {
         const passwordMatch = await bcrypt.compare(password, user.password)
 
         if (!passwordMatch) {
-            throw Boom.badRequest('Username or password is incorrect.')
+            throw Boom.badRequest('Incorrect Password.')
         }
 
         return await prisma.user.delete({
@@ -157,31 +189,34 @@ export async function deleteUser(data: z.infer<typeof loginBodySchema>) {
 }
 
 //DELETE by id
-export const deleteById = async (id: Number)=>{
-    try{
+export const deleteById = async (id: Number) => {
+    try {
         await prisma.user.findUniqueOrThrow({
-            where:{
-                id: Number(id)
-            }
+            where: {
+                id: Number(id),
+            },
         })
         return prisma.user.delete({
-            where:{
-                id: Number(id)
-            }
+            where: {
+                id: Number(id),
+            },
         })
-    }
-    catch(err){
+    } catch (err) {
         throw Boom.notFound('Data not found')
     }
 }
 
 //UPDATE by id
-export const updateData = async (id: any, body: any) => {
+export const updateData = async (id: number, data: z.infer<typeof signupBodySchema>) => {
     try {
-        const { email, password, phone_number} = body
-        return await prisma.user.create({
+        const { email, password, phone_number } = data
+        return await prisma.user.update({
+            where:{
+                email: email,
+            },
+            // how to link to address table
+            // include is not working
             data: {
-                email,
                 password: await bcrypt.hash(password, 10),
                 phone_number,
             },
