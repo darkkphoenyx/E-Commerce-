@@ -59,8 +59,7 @@ export const getById = async (id: number) => {
         // const result = await prisma.$queryRaw`
         //     select * from "User" u join "Address" a on a.user_id = u.id`
     } catch (err) {
-        console.error('Error retrieving data:', err)
-        throw err // You might want to handle or log the error appropriately
+        throw Boom.notFound("User not found")
     }
 }
 

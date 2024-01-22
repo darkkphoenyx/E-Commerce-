@@ -24,16 +24,16 @@ export const adminLogin = async (
         next(error)
     }
 }
+
 //GET user by id - admin access
 export const getById = async (
-    id: number,
-    req: RequestWithUserObject,
+    req: Request,
     res: Response,
     next: NextFunction
 ) => {
     try {
         console.log()
-        const response = await authService.getById(req.user.userId)
+        const response = await authService.getById(Number(req.params.id))
         console.log(response)
         res.json(response)
     } catch (err) {

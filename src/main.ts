@@ -16,6 +16,7 @@ app.listen(PORT, () => {
 
 app.use('/admin', Admin)
 app.use('/user', User)
+//error handling for methods that are not allowed
 app.use(function methodNotAllowed(req: Request, res: Response) {
     res.status(HttpStatus.METHOD_NOT_ALLOWED).json({
         error: {

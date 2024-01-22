@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { validateByBody } from '../validators/validate'
-import { loginSchema, signupSchema } from '../validators/auth.validator'
+import { validateByBody, validateByid } from '../validators/validate'
+import { loginBodySchema, loginSchema, signupSchema, updateById } from '../validators/auth.validator'
 import * as adminController from '../controller/admin.controller'
 import * as authController from '../controller/auth.controller'
 import * as userController from '../controller/user.controller'
@@ -15,9 +15,9 @@ const router = Router()
 router.post('/login', validateByBody(loginSchema), adminController.adminLogin)
 router.post('/signup', validateByBody(signupSchema), authController.signup)
 //GET all data -- admin only
-router.get('/allData', authenticateToken, isAdmin, adminController.getAllData)
+router.get('/profile', authenticateToken, isAdmin, adminController.getAllData)
 //get data of particular user
-router.get('/:id', authenticateToken, adminController.getById)
+router.get('/:id', validateByid(updateById),authenticateToken,isAdmin,adminController.getById)
 router.post('/refresh', authController.refreshToken)
 router.post('/logout', () => {
     console.log(
