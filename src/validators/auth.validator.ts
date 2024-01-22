@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { userAddressValidator } from './common.validator'
 
 //signup
 export const signupBodySchema = z.object({
@@ -28,6 +29,31 @@ export const loginBodySchema = z.object({
 
 export const loginSchema = z.object({
     body: loginBodySchema,
+})
+
+export const updateUserBodySchema = z
+    .object({
+        email: z
+            .string({
+                required_error: 'Email is required',
+            })
+            .email('Should be a valid email address')
+            .optional(),
+        password: z
+            .string({
+                required_error: 'Password is required',
+            })
+            .optional(),
+        // Sometimes you may want custom validators, like this in case
+        phone_number: z.string().optional(),
+        addresses: userAddressValidator,
+        is_admin: z.boolean().optional()
+    })
+    .strict()
+
+
+export const updateUserSchema = z.object({
+    body: updateUserBodySchema
 })
 
 //checking id is number

@@ -1,16 +1,16 @@
 import prisma from '../utils/prisma'
 // import * as jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import { loginBodySchema, signupBodySchema } from '../validators/auth.validator'
-import { number, string, z } from 'zod'
+import { signupBodySchema } from '../validators/auth.validator'
+import { z } from 'zod'
 import Boom from '@hapi/boom'
 import {
     createAccessToken,
     createRefreshToken,
     verifyRefreshToken,
 } from '../utils/token.util'
-import { NextFunction, response } from 'express'
 import { exclude } from '../utils'
+import { updateProfileBodySchema } from '../validators/profile.validator'
 
 //signup
 export const signup = async (user: z.infer<typeof signupBodySchema>) => {
@@ -58,8 +58,11 @@ export const getById = async (id: number) => {
         // //writing a raw sql query instead of include
         // const result = await prisma.$queryRaw`
         //     select * from "User" u join "Address" a on a.user_id = u.id`
-    } catch (err) {
-        throw Boom.notFound("User not found")
+    } catch (err: any) {
+        if ((err.code = 'P2025')) {
+            throw Boom.notFound(`User with id:${id} not found`)
+        }
+        throw err
     }
 }
 
@@ -154,39 +157,6 @@ export async function refresh(refreshToken: string) {
     }
 }
 
-// //DELETE data
-// export async function deleteUser(data: z.infer<typeof loginBodySchema>) {
-//     const { email, password } = data
-//     try {
-//         const user = await prisma.user.findFirst({
-//             where: { email: email },
-//             include: {
-//                 addresses: true,
-//             },
-//         })
-//         console.log('here is delete')
-//         if (!user) {
-//             throw Boom.badRequest('Username not found.')
-//         } else {
-//             console.log(user.password)
-//         }
-//         console.log(user.password)
-
-//         const passwordMatch = await bcrypt.compare(password, user.password)
-
-//         if (!passwordMatch) {
-//             throw Boom.badRequest('Incorrect Password.')
-//         }
-
-//         return await prisma.user.delete({
-//             where: {
-//                 email: email,
-//             },
-//         })
-//     } catch (err) {
-//         throw err
-//     }
-// }
 
 //DELETE user data
 export const deleteUser = async (id: Number) => {
@@ -226,27 +196,44 @@ export const deleteById = async (id: Number) => {
 //UPDATE by id
 export const updateData = async (
     id: number,
-    data: z.infer<typeof signupBodySchema>
+    data: z.infer<typeof updateProfileBodySchema>
 ) => {
     try {
-        const { email, password, phone_number } = data
-        return await prisma.user.update({
-            where: {
-                email: email,
-            },
-            // how to link to address table
-            // include is not working
-            data: {
-                password: await bcrypt.hash(password, 10),
-                phone_number,
-            },
-            select: {
-                id: true,
-                email: true,
-                phone_number: true,
-                is_admin: true,
+        const { addresses, password,...rest } = data
+        const newPassword= password ? await bcrypt.hash(password,10): undefined
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data:{ ...rest, password: newPassword},
+            include: {
+                addresses: true,
             },
         })
+
+        if (!addresses) return exclude(updatedUser, ['password'])
+
+        const updatedAddresses = await Promise.all(
+            addresses.map(async (address) => {
+                if (address.id) {
+                    return prisma.address.update({
+                        where: { id: address.id },
+                        data: address,
+                    })
+                }
+                const newAddress = await prisma.address.create({
+                    data: {
+                        ...address,
+                        id: undefined,
+                        user: { connect: { id } },
+                    },
+                })
+                return newAddress
+            })
+        )
+
+        updatedUser.addresses = updatedAddresses
+
+        return exclude(updatedUser, ['password'])
+        // return exclude(data, ['password'])
     } catch (err: any) {
         if (err.code === 'P2025') {
             throw Boom.notFound('post not found')

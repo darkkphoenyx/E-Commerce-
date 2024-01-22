@@ -1,13 +1,12 @@
 import { Router } from 'express'
 import { validateByBody, validateByid } from '../validators/validate'
-import { loginBodySchema, loginSchema, signupSchema, updateById } from '../validators/auth.validator'
+import { loginSchema, signupSchema, updateById } from '../validators/auth.validator'
 import * as adminController from '../controller/admin.controller'
 import * as authController from '../controller/auth.controller'
 import * as userController from '../controller/user.controller'
 import {
     authenticateToken,
     isAdmin,
-    isUser,
 } from '../middlewares/authentication.middleware'
 
 const router = Router()

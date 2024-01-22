@@ -67,3 +67,20 @@ export const deleteUser = async(
         next(err)
     }
 }
+
+//UPDATE by id - admin only
+export const updateData = async (
+    req: RequestWithUserObject,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const response = await userService.updateData(
+            req.user.userId,
+            req.body
+        )
+        res.status(200).json(response)
+    } catch (error) {
+        next(error)
+    }
+}

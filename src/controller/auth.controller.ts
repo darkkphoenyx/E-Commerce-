@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
-import { loginBodySchema, signupBodySchema } from '../validators/auth.validator'
+import { signupBodySchema } from '../validators/auth.validator'
 import * as authService from '../service/auth.service'
-import { RequestWithUserObject } from '../types'
 
 //Register new user
 export const signup = async (
@@ -34,19 +33,3 @@ export const refreshToken = async (
     }
 }
 
-//UPDATE by id
-export const updateData = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
-    try {
-        const response = await authService.updateData(
-            Number(req.params.id),
-            req.body
-        )
-        res.json(response)
-    } catch (error) {
-        next(error)
-    }
-}

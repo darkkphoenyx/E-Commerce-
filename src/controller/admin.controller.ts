@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
 import * as authService from '../service/auth.service'
-import { RequestWithUserObject } from '../types'
 import { loginBodySchema } from '../validators/auth.validator'
 
 //Login user
@@ -66,3 +65,4 @@ export const deleteById = async(req:Request,res:Response,next:NextFunction)=>{
         next(err)
     }
 }
+

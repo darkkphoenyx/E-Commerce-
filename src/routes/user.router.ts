@@ -1,17 +1,16 @@
 import { Router } from 'express'
-import { validateByBody, validateByid } from '../validators/validate'
+import { validateByBody } from '../validators/validate'
 import {
     loginSchema,
     signupSchema,
-    updateById,
 } from '../validators/auth.validator'
 import * as userController from '../controller/user.controller'
 import * as authController from '../controller/auth.controller'
 import {
     authenticateToken,
-    isAdmin,
     isUser,
 } from '../middlewares/authentication.middleware'
+import { updateProfileBodySchema } from '../validators/profile.validator'
 
 const router = Router()
 
@@ -35,11 +34,10 @@ router.post('/forgot-password', () => {
 
 //update data
 router.put(
-    '/update/:id',
-    validateByid(updateById),
-    validateByBody(signupSchema),
+    '/update',
     authenticateToken,
-    authController.updateData
+    validateByBody(updateProfileBodySchema),
+    userController.updateData
 
     // if user is already logged in then why should we pass the id again.. how to make it work w/o id
 )
