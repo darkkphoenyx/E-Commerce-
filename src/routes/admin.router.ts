@@ -29,7 +29,7 @@ router.delete(
     '/delete/:id',
     authenticateToken,
     isAdmin,
-    userController.deleteData
+    userController.deleteUser
 )
 //Forgot password
 router.post('/forgot-password', () => {

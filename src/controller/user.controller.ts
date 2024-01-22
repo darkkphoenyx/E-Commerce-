@@ -26,7 +26,6 @@ export const userLogin = async (
 }
 //GET user own data - user only
 export const retrieveById = async (
-    id: number,
     req: RequestWithUserObject,
     res: Response,
     next: NextFunction
@@ -42,16 +41,29 @@ export const retrieveById = async (
 }
 
 // //Delete user
-export const deleteData = async (
-    req: RequestWithUserObject,
-    res: Response,
-    next: NextFunction
-) => {
+// export const deleteData = async (
+//     req: RequestWithUserObject,
+//     res: Response,
+//     next: NextFunction
+// ) => {
+//     try {
+//         const request = loginBodySchema.parse(req.body)
+//         const response = await userService.deleteUser(request)
+//         res.json(response)
+//     } catch (err) {
+//         next(err)
+//     }
+// }
+
+//DELETE user account
+export const deleteUser = async(
+    req: RequestWithUserObject, res: Response, next: NextFunction
+)=>{
     try {
-        const request = loginBodySchema.parse(req.body)
-        const response = await userService.deleteUser(request)
+        const response = await userService.deleteUser(Number(req.user.userId))
         res.json(response)
-    } catch (err) {
+    }
+    catch(err){
         next(err)
     }
 }

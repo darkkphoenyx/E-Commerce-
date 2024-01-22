@@ -1,6 +1,10 @@
 import { Router } from 'express'
 import { validateByBody, validateByid } from '../validators/validate'
-import { loginSchema, signupSchema, updateById } from '../validators/auth.validator'
+import {
+    loginSchema,
+    signupSchema,
+    updateById,
+} from '../validators/auth.validator'
 import * as userController from '../controller/user.controller'
 import * as authController from '../controller/auth.controller'
 import {
@@ -14,7 +18,7 @@ const router = Router()
 router.post('/login', validateByBody(loginSchema), userController.userLogin)
 router.post('/signup', validateByBody(signupSchema), authController.signup)
 //get user own details
-router.get('/:id', authenticateToken, isUser,userController.retrieveById)
+router.get('/profile', authenticateToken, isUser, userController.retrieveById)
 router.post('/refresh', authController.refreshToken)
 router.post('/logout', () => {
     console.log(
@@ -22,7 +26,7 @@ router.post('/logout', () => {
     )
 })
 //only user can delete own data
-router.delete('/delete', authenticateToken, isUser, userController.deleteData)
+router.delete('/delete', authenticateToken, isUser, userController.deleteUser)
 router.post('/forgot-password', () => {
     console.log(
         'this method should send an email using sendgrid to the user with forgot password link'
@@ -36,6 +40,8 @@ router.put(
     validateByBody(signupSchema),
     authenticateToken,
     authController.updateData
+
+    // if user is already logged in then why should we pass the id again.. how to make it work w/o id
 )
 export default router
 

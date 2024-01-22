@@ -9,7 +9,8 @@ import {
     createRefreshToken,
     verifyRefreshToken,
 } from '../utils/token.util'
-import { NextFunction } from 'express'
+import { NextFunction, response } from 'express'
+import { exclude } from '../utils'
 
 //signup
 export const signup = async (user: z.infer<typeof signupBodySchema>) => {
@@ -53,7 +54,7 @@ export const getById = async (id: number) => {
                 addresses: true,
             },
         })
-        return result
+        return exclude(result, ['password'])
         // //writing a raw sql query instead of include
         // const result = await prisma.$queryRaw`
         //     select * from "User" u join "Address" a on a.user_id = u.id`
@@ -100,7 +101,7 @@ export async function userLogin(email: string, password: string) {
     if (!passwordMatch) {
         throw Boom.badRequest('Incorrect Password.')
     }
-    if(user.is_admin){
+    if (user.is_admin) {
         throw Boom.unauthorized('Admin is not allowed.')
     }
 
@@ -130,9 +131,9 @@ export async function adminLogin(email: string, password: string) {
     if (!passwordMatch) {
         throw Boom.badRequest('Incorrect Password.')
     }
-    if(!user.is_admin){
-        throw Boom.unauthorized("Admin only login")
-    } 
+    if (!user.is_admin) {
+        throw Boom.unauthorized('Admin only login')
+    }
 
     const accessToken = createAccessToken(user.id, user.is_admin)
 
@@ -154,40 +155,57 @@ export async function refresh(refreshToken: string) {
     }
 }
 
-//DELETE data
-export async function deleteUser(data: z.infer<typeof loginBodySchema>) {
-    const { email, password } = data
+// //DELETE data
+// export async function deleteUser(data: z.infer<typeof loginBodySchema>) {
+//     const { email, password } = data
+//     try {
+//         const user = await prisma.user.findFirst({
+//             where: { email: email },
+//             include: {
+//                 addresses: true,
+//             },
+//         })
+//         console.log('here is delete')
+//         if (!user) {
+//             throw Boom.badRequest('Username not found.')
+//         } else {
+//             console.log(user.password)
+//         }
+//         console.log(user.password)
+
+//         const passwordMatch = await bcrypt.compare(password, user.password)
+
+//         if (!passwordMatch) {
+//             throw Boom.badRequest('Incorrect Password.')
+//         }
+
+//         return await prisma.user.delete({
+//             where: {
+//                 email: email,
+//             },
+//         })
+//     } catch (err) {
+//         throw err
+//     }
+// }
+
+//DELETE user data
+export const deleteUser = async (id: Number) => {
     try {
-        const user = await prisma.user.findFirst({
-            where: { email: email },
-            include: {
-                addresses: true,
+        const response = await prisma.user.findUniqueOrThrow({
+            where: {
+                id: Number(id),
             },
         })
-        console.log('here is delete')
-        if (!user) {
-            throw Boom.badRequest('Username not found.')
-        } else {
-            console.log(user.password)
-        }
-        console.log(user.password)
-
-        const passwordMatch = await bcrypt.compare(password, user.password)
-
-        if (!passwordMatch) {
-            throw Boom.badRequest('Incorrect Password.')
-        }
-
         return await prisma.user.delete({
             where: {
-                email: email,
+                id: Number(id),
             },
         })
     } catch (err) {
-        throw err
+        throw Boom.notFound('User not found')
     }
 }
-
 //DELETE by id
 export const deleteById = async (id: Number) => {
     try {
@@ -207,11 +225,14 @@ export const deleteById = async (id: Number) => {
 }
 
 //UPDATE by id
-export const updateData = async (id: number, data: z.infer<typeof signupBodySchema>) => {
+export const updateData = async (
+    id: number,
+    data: z.infer<typeof signupBodySchema>
+) => {
     try {
         const { email, password, phone_number } = data
         return await prisma.user.update({
-            where:{
+            where: {
                 email: email,
             },
             // how to link to address table
